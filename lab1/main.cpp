@@ -12,7 +12,7 @@ int main()
 
     unsigned int a = 1, b;
 
-    for(unsigned int i = 2; i < n; i++) {
+    for(unsigned int i = 2; i <= n/2; i++) {
         if (n % i == 0) {
             a = n / i;
             break;
