@@ -155,7 +155,7 @@ int main() {
             break;
 
         default:
-            cout << "Invalid choice\n";
+            cout << "Неправильный выбор\n";
         }
     }
 
