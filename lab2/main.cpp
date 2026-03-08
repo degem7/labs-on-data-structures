@@ -3,11 +3,13 @@
 #include <complex>
 #include <random>
 #include <chrono>
+#include <windows.h>
 
 #ifdef USE_BLAS
 #include <openblas/cblas.h>
 #endif
 
+using namespace std;
 using cd = std::complex<double>;
 using Clock = std::chrono::high_resolution_clock;
 
@@ -15,9 +17,9 @@ constexpr int N = 1024;      // размер матриц
 constexpr int BS = 64;       // размер блока для оптимизации
 
 // Генерация матрицы
-void generate_matrix(std::vector<cd>& A) {
-    std::mt19937 gen(42);
-    std::uniform_real_distribution<double> dist(0.0, 1.0);
+void generate_matrix(vector<cd>& A) {
+    mt19937 gen(42);
+    uniform_real_distribution<double> dist(0.0, 1.0);
 
     for (auto& x : A) {
         x = cd(dist(gen), dist(gen));
@@ -25,9 +27,9 @@ void generate_matrix(std::vector<cd>& A) {
 }
 
 // Наивное умножение
-void matmul_naive(const std::vector<cd>& A,
-                  const std::vector<cd>& B,
-                  std::vector<cd>& C) {
+void matmul_naive(const vector<cd>& A,
+                  const vector<cd>& B,
+                  vector<cd>& C) {
 
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
@@ -42,9 +44,9 @@ void matmul_naive(const std::vector<cd>& A,
 
 // BLAS
 #ifdef USE_BLAS
-void matmul_blas(const std::vector<cd>& A,
-                 const std::vector<cd>& B,
-                 std::vector<cd>& C) {
+void matmul_blas(const vector<cd>& A,
+                 const vector<cd>& B,
+                 vector<cd>& C) {
 
     cd alpha = 1.0;
     cd beta  = 0.0;
@@ -64,9 +66,9 @@ void matmul_blas(const std::vector<cd>& A,
 #endif
 
 // Блочное умножение с порядком i-k-j
-void matmul_blocked_parallel(const std::vector<cd>& A,
-                    const std::vector<cd>& B,
-                    std::vector<cd>& C) {
+void matmul_blocked_parallel(const vector<cd>& A,
+                    const vector<cd>& B,
+                    vector<cd>& C) {
 
 #pragma omp parallel for schedule(static)
     for (int ii = 0; ii < N; ii += BS) {
@@ -88,23 +90,25 @@ void matmul_blocked_parallel(const std::vector<cd>& A,
 }
 
 // Замер времени
-double measure_time(void (*func)(const std::vector<cd>&,
-                                const std::vector<cd>&,
-                                std::vector<cd>&),
-                    const std::vector<cd>& A,
-                    const std::vector<cd>& B,
-                    std::vector<cd>& C) {
+double measure_time(void (*func)(const vector<cd>&,
+                                const vector<cd>&,
+                                vector<cd>&),
+                    const vector<cd>& A,
+                    const vector<cd>& B,
+                    vector<cd>& C) {
 
     auto start = Clock::now();
     func(A, B, C);
     auto end = Clock::now();
 
-    return std::chrono::duration<double>(end - start).count();
+    return chrono::duration<double>(end - start).count();
 }
 
 int main() {
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
 
-    std::vector<cd> A(N * N), B(N * N), C(N * N);
+    vector<cd> A(N * N), B(N * N), C(N * N);
 
     generate_matrix(A);
     generate_matrix(B);
@@ -113,47 +117,50 @@ int main() {
 
     while (true) {
 
-        std::cout << "\nChoose multiplication method:\n";
-        std::cout << "1 - Naive\n";
+        cout << "\nВыберите метод умножения:\n";
+        cout << "1 - Naive\n";
 #ifdef USE_BLAS
-        std::cout << "2 - BLAS\n";
+        cout << "2 - BLAS\n";
 #endif
-        std::cout << "3 - Blocked OMP\n";
-        std::cout << "0 - Exit\n";
-        std::cout << "Choice: ";
+        cout << "3 - Blocked OMP\n";
+        cout << "0 - Выход\n";
+        cout << "Выбор: ";
 
         int choice;
-        std::cin >> choice;
+        cin >> choice;
 
         if (choice == 0)
             break;
 
-        std::fill(C.begin(), C.end(), 0.0);
+        fill(C.begin(), C.end(), 0.0);
 
         double t = 0;
 
         switch (choice) {
         case 1:
             t = measure_time(matmul_naive, A, B, C);
-            std::cout << "Naive: " << operations / t * 1e-6 << " MFlops\n";
+            cout << "Naive: " << operations / t * 1e-6 << " MFlops\n";
             break;
 
 #ifdef USE_BLAS
         case 2:
             t = measure_time(matmul_blas, A, B, C);
-            std::cout << "BLAS: " << operations / t * 1e-6 << " MFlops\n";
+            cout << "BLAS: " << operations / t * 1e-6 << " MFlops\n";
             break;
 #endif
 
         case 3:
             t = measure_time(matmul_blocked_parallel, A, B, C);
-            std::cout << "Blocked OMP: " << operations / t * 1e-6 << " MFlops\n";
+            cout << "Blocked OMP: " << operations / t * 1e-6 << " MFlops\n";
             break;
 
         default:
-            std::cout << "Invalid choice\n";
+            cout << "Invalid choice\n";
         }
     }
+
+    cout << "Бергер Денис Максимович, 090304-РПИа-025" << endl;
+    while(getchar() != '\n');
 
     return 0;
 }
