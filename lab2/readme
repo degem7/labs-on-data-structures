@@ -1,0 +1,3 @@
+Компиляция происходила в MSYS MINGW64 с помощью следующей команды:
+g++ main.cpp -O3 -march=native -fopenmp -DUSE_BLAS -lopenblas
+-O3 и -march=native - нужно для более сильной оптимизации matmul_blocked_parallel
